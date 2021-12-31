@@ -8,6 +8,10 @@ class OpCode(IntEnum):
     MULTIPLY = 2
     INPUT = 3
     OUTPUT = 4
+    JUMP_IF_TRUE = 5
+    JUMP_IF_FALSE = 6
+    LESS_THAN = 7
+    EQUALS = 8
     HALT = 99
 
 OPCODE_PARAMETERS = {
@@ -15,7 +19,11 @@ OPCODE_PARAMETERS = {
     OpCode.MULTIPLY: (2,1),
     OpCode.INPUT: (0,1),
     OpCode.OUTPUT: (1,0),
-    OpCode.HALT: (0,0)
+    OpCode.JUMP_IF_TRUE: (2,0),
+    OpCode.JUMP_IF_FALSE: (2,0),
+    OpCode.LESS_THAN: (2,1),
+    OpCode.EQUALS: (2,1),
+    OpCode.HALT: (0,0),
 }
 
 class ParameterMode(IntEnum):
@@ -39,6 +47,10 @@ class Computer:
             OpCode.MULTIPLY: self.instruction_multiply,
             OpCode.INPUT: self.instruction_input,
             OpCode.OUTPUT: self.instruction_output,
+            OpCode.JUMP_IF_TRUE: self.instruction_jump_if_true,
+            OpCode.JUMP_IF_FALSE: self.instruction_jump_if_false,
+            OpCode.LESS_THAN: self.instruction_less_than,
+            OpCode.EQUALS: self.instruction_equals,
             OpCode.HALT: self.instruction_halt
         }
 
@@ -102,6 +114,22 @@ class Computer:
 
     def instruction_output(self, input: int):
         print(input)
+
+    def instruction_jump_if_true(self, input: int, next_instruction: int):
+        if input != 0:
+            self.instruction_pointer = next_instruction
+
+    def instruction_jump_if_false(self, input: int, next_instruction: int):
+        if input == 0:
+            self.instruction_pointer = next_instruction
+
+    def instruction_less_than(self, input_1: int, input_2: int, output: int):
+        value = 1 if input_1 < input_2 else 0
+        self.write_at(output, value)
+
+    def instruction_equals(self, input_1: int, input_2: int, output: int):
+        value = 1 if input_1 == input_2 else 0
+        self.write_at(output, value)
 
     def instruction_halt(self):
         self.halted = True
