@@ -41,6 +41,7 @@ class Computer:
         self.instruction_pointer = 0
         self.halted = False
         self.inputs: List[int] = []
+        self.output = None
 
         self.instructions = {
             OpCode.ADD: self.instruction_add,
@@ -113,6 +114,7 @@ class Computer:
         self.write_at(output, input)
 
     def instruction_output(self, input: int):
+        self.output = input
         print(input)
 
     def instruction_jump_if_true(self, input: int, next_instruction: int):
