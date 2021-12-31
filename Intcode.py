@@ -40,6 +40,7 @@ class Computer:
         self.memory = program
         self.instruction_pointer = 0
         self.halted = False
+        self.waiting_for_input = False
         self.inputs: List[int] = []
         self.output = None
 
@@ -57,7 +58,8 @@ class Computer:
 
     def run(self, inputs: List[int]=[]):
         self.inputs = inputs
-        while not self.halted:
+        self.waiting_for_input = False
+        while not self.halted and not self.waiting_for_input:
             self.run_instruction()
 
     def run_instruction(self):
@@ -110,12 +112,16 @@ class Computer:
         self.write_at(output, input_1 * input_2)
 
     def instruction_input(self, output: int):
-        input = self.inputs.pop(0)
-        self.write_at(output, input)
+        if len(self.inputs) > 0:
+            input = self.inputs.pop(0)
+            self.write_at(output, input)
+        else:
+            self.waiting_for_input = True
+            self.instruction_pointer -= 2
 
     def instruction_output(self, input: int):
         self.output = input
-        print(input)
+        print('Output:',input)
 
     def instruction_jump_if_true(self, input: int, next_instruction: int):
         if input != 0:
