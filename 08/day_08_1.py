@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from typing import List, TypeVar, Iterator
-import math
 
 class Image:
     def __init__(self, data: List[int]):
@@ -13,27 +12,11 @@ class Image:
 
 def main():
     image = read_image()
-
-    fewest_zeros = math.inf
-    layer_with_fewest_zeros = None
-
-    for layer in image.layers:
-        layer_zeros = count_digit(layer, 0)
-
-        if layer_zeros < fewest_zeros:
-            fewest_zeros = layer_zeros
-            layer_with_fewest_zeros = layer
-
-    assert layer_with_fewest_zeros
-
-    layer_ones = count_digit(layer_with_fewest_zeros, 1)
-    layer_twos = count_digit(layer_with_fewest_zeros, 2)
+    layer_with_fewest_zeros = min(image.layers, key=lambda l: l.count(0))
+    layer_ones = layer_with_fewest_zeros.count(1)
+    layer_twos = layer_with_fewest_zeros.count(2)
     result = layer_ones * layer_twos
     print('Result:', result)
-
-
-def count_digit(layer: List[int], digit: int) -> int:
-    return sum(1 if d == digit else 0 for d in layer)
 
 
 T = TypeVar('T')
