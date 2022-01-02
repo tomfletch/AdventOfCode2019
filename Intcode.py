@@ -1,5 +1,6 @@
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Dict
 from enum import IntEnum
+from collections import defaultdict
 
 Program = List[int]
 
@@ -12,6 +13,7 @@ class OpCode(IntEnum):
     JUMP_IF_FALSE = 6
     LESS_THAN = 7
     EQUALS = 8
+    ADJUST_RELATIVE_BASE = 9
     HALT = 99
 
 OPCODE_PARAMETERS = {
@@ -23,12 +25,14 @@ OPCODE_PARAMETERS = {
     OpCode.JUMP_IF_FALSE: (2,0),
     OpCode.LESS_THAN: (2,1),
     OpCode.EQUALS: (2,1),
+    OpCode.ADJUST_RELATIVE_BASE: (1,0),
     OpCode.HALT: (0,0),
 }
 
 class ParameterMode(IntEnum):
     POSITION = 0
     IMMEDIATE = 1
+    RELATIVE = 2
 
 class Instruction(NamedTuple):
     opcode: OpCode
@@ -37,8 +41,13 @@ class Instruction(NamedTuple):
 
 class Computer:
     def __init__(self, program: Program):
-        self.memory = program
+        self.memory: Dict[int, int] = defaultdict(int)
+
+        for i, value in enumerate(program):
+            self.memory[i] = value
+
         self.instruction_pointer = 0
+        self.relative_base = 0
         self.halted = False
         self.waiting_for_input = False
         self.inputs: List[int] = []
@@ -53,6 +62,7 @@ class Computer:
             OpCode.JUMP_IF_FALSE: self.instruction_jump_if_false,
             OpCode.LESS_THAN: self.instruction_less_than,
             OpCode.EQUALS: self.instruction_equals,
+            OpCode.ADJUST_RELATIVE_BASE: self.instruction_adjust_relative_base,
             OpCode.HALT: self.instruction_halt
         }
 
@@ -83,26 +93,35 @@ class Computer:
 
         for _ in range(input_parameters):
             parameter_mode = ParameterMode(parameter_modes % 10)
-
             value = self.read()
 
             if parameter_mode == ParameterMode.POSITION:
                 value = self.read_at(value)
+            elif parameter_mode == ParameterMode.RELATIVE:
+                value = self.read_at(self.relative_base + value)
 
             inputs.append(value)
 
             parameter_modes //= 10
 
         for _ in range(output_parameters):
+            parameter_mode = ParameterMode(parameter_modes % 10)
             value = self.read()
+
+            if parameter_mode == ParameterMode.RELATIVE:
+                value += self.relative_base
+
             outputs.append(value)
 
-        return Instruction(opcode, inputs, outputs)
+        instruction = Instruction(opcode, inputs, outputs)
+        return instruction
 
     def read_at(self, index: int) -> int:
+        assert index >= 0
         return self.memory[index]
 
     def write_at(self, index: int, value: int):
+        assert index >= 0
         self.memory[index] = value
 
     def instruction_add(self, input_1: int, input_2: int, output: int):
@@ -138,6 +157,9 @@ class Computer:
     def instruction_equals(self, input_1: int, input_2: int, output: int):
         value = 1 if input_1 == input_2 else 0
         self.write_at(output, value)
+
+    def instruction_adjust_relative_base(self, input: int):
+        self.relative_base += input
 
     def instruction_halt(self):
         self.halted = True
