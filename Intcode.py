@@ -40,18 +40,19 @@ class Instruction(NamedTuple):
     outputs: List[int]
 
 class Computer:
-    def __init__(self, program: Program):
+    def __init__(self, program: Program, log_output: bool=True):
         self.memory: Dict[int, int] = defaultdict(int)
 
         for i, value in enumerate(program):
             self.memory[i] = value
 
+        self.log_output = log_output
         self.instruction_pointer = 0
         self.relative_base = 0
         self.halted = False
         self.waiting_for_input = False
         self.inputs: List[int] = []
-        self.output = None
+        self.outputs: List[int] = []
 
         self.instructions = {
             OpCode.ADD: self.instruction_add,
@@ -124,6 +125,9 @@ class Computer:
         assert index >= 0
         self.memory[index] = value
 
+    def get_output(self):
+        return self.outputs.pop(0)
+
     def instruction_add(self, input_1: int, input_2: int, output: int):
         self.write_at(output, input_1 + input_2)
 
@@ -139,8 +143,9 @@ class Computer:
             self.instruction_pointer -= 2
 
     def instruction_output(self, input: int):
-        self.output = input
-        print('Output:',input)
+        self.outputs.append(input)
+        if self.log_output:
+            print('Output:',input)
 
     def instruction_jump_if_true(self, input: int, next_instruction: int):
         if input != 0:
