@@ -104,9 +104,13 @@ def main():
     while True:
         inventory.reverse_reactions(list(reactions.values()))
         ore_count = inventory.count_ore()
+        print('ore', ore_count)
 
         ore_remaining = MAX_ORE - ore_count
+        print('remaining', ore_remaining)
+        print('single', single_fuel_chemicals['ORE'])
         mult = ore_remaining // single_fuel_chemicals['ORE']
+        print('mult', mult)
 
         if mult < 1:
             break
@@ -115,6 +119,21 @@ def main():
 
         for chemical, quantity in single_fuel_chemicals.items():
             inventory.chemicals[chemical] += quantity * mult
+
+    ore_count = inventory.count_ore()
+
+    while ore_count < MAX_ORE:
+        inventory.chemicals['FUEL'] += 1
+        fuel_count += 1
+
+        while not inventory.is_all_ore():
+            chemical = inventory.get_next_chemical()
+            reaction = reactions[chemical]
+            inventory.perform_reaction(reaction)
+
+        ore_count = inventory.count_ore()
+
+    fuel_count -= 1
 
     print('Max fuel:', fuel_count)
 
