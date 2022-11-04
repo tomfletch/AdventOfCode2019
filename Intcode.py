@@ -1,4 +1,4 @@
-from typing import List, NamedTuple, Dict
+from typing import List, NamedTuple, Dict, Union
 from enum import IntEnum
 from collections import defaultdict
 
@@ -67,7 +67,9 @@ class Computer:
             OpCode.HALT: self.instruction_halt
         }
 
-    def run(self, inputs: List[int]=[]):
+    def run(self, inputs: Union[List[int], str]=[]):
+        if isinstance(inputs, str):
+            inputs = [ord(i) for i in inputs]
         self.inputs = inputs
         self.waiting_for_input = False
         while not self.halted and not self.waiting_for_input:
@@ -127,6 +129,22 @@ class Computer:
 
     def get_output(self):
         return self.outputs.pop(0)
+
+    def get_all_output(self):
+        output = self.outputs
+        self.outputs = []
+        return output
+
+    def get_ascii_output(self):
+        output = self.get_all_output()
+        output_str = ''
+
+        for o in output:
+            if o > 128:
+                output_str += str(o)
+            else:
+                output_str += chr(o)
+        return output_str
 
     def instruction_add(self, input_1: int, input_2: int, output: int):
         self.write_at(output, input_1 + input_2)
