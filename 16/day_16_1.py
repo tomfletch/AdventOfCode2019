@@ -1,42 +1,32 @@
-#!/usr/bin/env python3
-from typing import List
+#!/usr/bin/env python3.11
 
-PATTERN = [0,1,0,-1]
+BASE_PATTERN = [0, 1, 0, -1]
 
 def main():
-    signal = read_signal()
-    patterns = calc_patterns(len(signal))
-
+    signal = read_input()
     for _ in range(100):
-        signal = do_phase(signal, patterns)
-    print(''.join(str(c) for c in signal[:8]))
+        signal = fft(signal)
+    print(''.join(str(x) for x in signal[:8]))
 
-def do_phase(signal: List[int], patterns: List[List[int]]) -> List[int]:
-    new_signal: List[int] = []
+def fft(signal: list[int]):
+    output: list[int] = []
 
     for i in range(len(signal)):
-        digit_sum = 0
-        for signal_digit, pattern_digit in zip(signal, patterns[i]):
-            digit_sum += signal_digit * pattern_digit
-        new_signal.append(abs(digit_sum) % 10)
+        output.append(fft_digit(i, signal))
 
-    return new_signal
+    return output
 
+def fft_digit(digit: int, signal: list[int]):
+    total = 0
+    for i in range(digit, len(signal)):
+        mult = BASE_PATTERN[((i + 1) // (digit + 1)) % 4]
+        total += mult * signal[i]
 
-def calc_patterns(len: int) -> List[List[int]]:
-    return [calc_pattern(len, i) for i in range(len)]
+    return abs(total) % 10
 
-def calc_pattern(len: int, index: int) -> List[int]:
-    pattern: List[int] = []
-    for i in range(len):
-        pattern.append(PATTERN[((i+1) // (index+1)) % 4])
-
-    return pattern
-
-
-def read_signal() -> List[int]:
-    with open('input.txt') as f:
-        return [int(c) for c in f.readline().rstrip()]
+def read_input():
+    with open('input.txt') as file:
+        return [int(x) for x in file.readline().strip()]
 
 if __name__ == '__main__':
     main()
